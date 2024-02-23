@@ -1,0 +1,70 @@
+/* AudioInterface.css */
+
+body {
+  background-color: #1C1A27; /* Dark background color */
+  color: #ffffff; /* Light text color */
+}
+
+.audio-interface-container {
+  font-family: Arial, sans-serif;
+  margin: 20px auto;
+  max-width: 600px;
+  text-align: center;
+}
+
+.audio-denoiser-header {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #bb86fc; /* Purple header color */
+}
+
+.submit-button:disabled {
+  background-color: #444444; /* Dark gray for disabled button */
+  cursor: not-allowed;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #F2B8B5; /* Purple button color */
+  color: #1C1A27;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #c68a82; /* Darker shade of purple on hover */
+}
+
+.audio-player {
+  margin-top: 10px;
+}
+
+.audio-control-container {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  align-items: center; /* Center the items vertically */
+}
+
+.audio-control-container button {
+  margin: 0 10px; /* Spacing between buttons */
+}
+
+.header-container {
+  margin-bottom: 20px;
+}
+
+.audio-denoiser-header {
+  font-size: 50px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.header-description {
+  font-size: 16px;
+  color: #666;
+}
