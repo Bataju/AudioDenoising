@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import "./AudioInterface.css"; //CSS file
-import CSRFToken from "./csrftoken";
+// import CSRFToken from "./csrftoken";
 
 function AudioInterface() {
   const [audioFile, setAudioFile] = useState(null);
@@ -10,6 +10,7 @@ function AudioInterface() {
   const outputAudioRef = useRef(null);
   const [isPlayingInput, setIsPlayingInput] = useState(false);
   const [isPlayingOutput, setIsPlayingOutput] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -37,35 +38,24 @@ function AudioInterface() {
     }
   };
 
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      const cookieValue = parts.pop().split(";").shift();
-      return cookieValue.trim(); // Remove leading/trailing whitespace
-    } else {
-      return null; // Return null if cookie not found
-    }
-  };
-
   const handleSubmitAudio = async () => {
     if (!audioFile) return;
+
+    //clear previous response
+    setOutputAudio(null);
+    setIsLoading(true); //set loading state to true
 
     const formData = new FormData();
     formData.append("audio_file", audioFile);
 
     try {
-      const csrftoken = getCookie("csrftoken"); // Function to get CSRF token from cookie
       const response = await fetch("http://localhost:8000/api/denoise/", {
         method: "POST",
-        mode: 'no-cors',
-        headers: {
-          "X-CSRFToken": csrftoken,
-        },
         body: formData,
       });
-
+      console.log(response);
       if (response.ok) {
+        console.log("response aaayoo");
         const blob = await response.blob();
         setOutputAudio(blob);
       } else {
@@ -73,6 +63,8 @@ function AudioInterface() {
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsLoading(false); //set loading state to false after fetching completes
     }
   };
 
@@ -83,7 +75,6 @@ function AudioInterface() {
           <h2 className="audio-denoiser-header">Audio Denoiser</h2>
           <p className="header-description"></p>
         </div>
-        <CSRFToken />
         <input type="file" accept=".wav" onChange={handleFileChange} />
         {audioFile && (
           <div className="audio-player">
@@ -105,15 +96,18 @@ function AudioInterface() {
             </div>
           </div>
         )}
+        {isLoading && <p>Processing...</p>} 
         {outputAudio && (
           <div className="audio-player">
             <audio ref={outputAudioRef} controls>
               <source src={URL.createObjectURL(outputAudio)} type="audio/wav" />
               Your browser does not support the audio element.
             </audio>
-            <button onClick={() => handlePlayPause(outputAudioRef)}>
-              {isPlayingOutput ? "Pause" : "Play"}
-            </button>
+            <div className="audio-control-container">
+              <button onClick={() => handlePlayPause(outputAudioRef)}>
+                {isPlayingOutput ? "Pause" : "Play"}
+              </button>
+            </div>
           </div>
         )}
       </div>

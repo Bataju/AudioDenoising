@@ -4,9 +4,10 @@ import soundfile as sf
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import model_from_json
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse, FileResponse, HttpResponse
 import os
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from wsgiref.util import FileWrapper
 
 def noise_estimation(noisy_speech, n_fft, hop_length_fft):
 #estimates the noise level of a noisy speech signal using spectral subtraction.
@@ -127,7 +128,7 @@ def denoise_audio(request):
             enhanced_speech[i] = stft_noisy_speech[i] - noise_magnitude[i]
         enhanced_audio = librosa.istft(enhanced_speech, hop_length=hop_length_fft)
 
-        sf.write(f"{dir_save_prediction}/spec_{input_file_name}{audio_output_prediction}", enhanced_audio, sample_rate, 'PCM_24')
+        sf.write(f"{dir_save_prediction}/{input_file_name}_spec{audio_output_prediction}", enhanced_audio, sample_rate, 'PCM_24')
 
         audio = np.vstack(audio_to_audio_frame_stack(enhanced_audio, frame_length, hop_length_frame))
         del enhanced_audio
@@ -164,25 +165,24 @@ def denoise_audio(request):
 
         # Return the denoised audio file as the response
         output_file_path = f"{dir_save_prediction}/{input_file_name}{audio_output_prediction}"
-        print(output_file_path)
         if os.path.exists(output_file_path):
-            print("file exists")
-            file = None
             try:
-                file = open(output_file_path, 'rb')
-                print("file epened")
-                print(file)
-                response = FileResponse(file)
-                response['Content-Type'] = 'audio/wav'
-                response['Content-Disposition'] = f'attachment; filename="{audio_output_prediction}"'
-                response["Access-Control-Allow-Origin"] = "*"  # Set CORS header
-                return response
+                #file in binary mode
+                with open(output_file_path, 'rb') as file:
+                    #a FileWrapper instance
+                    wrapper = FileWrapper(file)
+                    #an HttpResponse object with the FileWrapper as content
+                    response = HttpResponse(wrapper, content_type='audio/wav')
+                    response['Content-Disposition'] = 'attachment; filename='+input_file_name+audio_output_prediction
+
+                    return response  #return the response
+
             except Exception as e:
                 print(f"Error opening file: {e}")
-            finally:
-                if file:
-                    file.close()
+                # Handle the exception appropriately
         else:
-            return JsonResponse({'status': 'error', 'message': 'Output file not found.'})
+            return HttpResponse("File not found", status=404)  # Return a 404 response if the file does not exist
+
     else:
         return JsonResponse({'status': 'error', 'message': 'Method not allowed.'})
+    
