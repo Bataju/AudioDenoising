@@ -8,6 +8,8 @@ from django.http import JsonResponse, FileResponse, HttpResponse
 import os
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from wsgiref.util import FileWrapper
+from pydub import AudioSegment
+import tempfile
 
 def noise_estimation(noisy_speech, n_fft, hop_length_fft):
 #estimates the noise level of a noisy speech signal using spectral subtraction.
@@ -93,6 +95,8 @@ def inv_scaled_ou(matrix_spec):
     matrix_spec = matrix_spec * 82 + 6
     return matrix_spec
 
+
+
 # @ensure_csrf_cookie
 @csrf_exempt
 def denoise_audio(request):
@@ -116,9 +120,15 @@ def denoise_audio(request):
         audio_output_prediction = '_denoised.wav'
         dir_save_prediction = 'api/audio'
 
-        #extract audio data from the request
+        # Extract audio data from the request
         audio_data = request.FILES['audio_file']
-        input_file_name = audio_data.name[0:-4]
+        input_file_name = audio_data.name.split('.')[0]
+
+        # # Check if the file is in M4A format
+        # if audio_data.name.endswith('.m4a'):
+        #     output_wav_file = m4a_to_wav(audio_data)
+        #     audio_data = output_wav_file
+
 
         #perform denoising
         noisy_speech, _ = librosa.load(audio_data, sr=sample_rate)

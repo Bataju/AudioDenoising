@@ -2,6 +2,17 @@ import React, { useState, useRef } from "react";
 import "./AudioInterface.css"; //CSS file
 // import CSRFToken from "./csrftoken";
 
+const downloadOutput = (audioBlob) => {
+  const url = URL.createObjectURL(audioBlob);
+  const a = document.createElement("a");
+  a.style.display = "none";
+  a.href = url;
+  a.download = "output_audio.wav";
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
+
 function AudioInterface() {
   const [audioFile, setAudioFile] = useState(null);
   const [outputAudio, setOutputAudio] = useState(null);
@@ -10,12 +21,13 @@ function AudioInterface() {
   const outputAudioRef = useRef(null);
   const [isPlayingInput, setIsPlayingInput] = useState(false);
   const [isPlayingOutput, setIsPlayingOutput] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setAudioFile(file);
     setInputKey((prevKey) => prevKey + 1); //update inputKey to force re-render
+    setOutputAudio(null);
   };
 
   const handlePlayPause = (audioRef) => {
@@ -75,10 +87,20 @@ function AudioInterface() {
           <h2 className="audio-denoiser-header">Audio Denoiser</h2>
           <p className="header-description"></p>
         </div>
-        <input type="file" accept=".wav" onChange={handleFileChange} />
+        <input
+          type="file"
+          accept=".wav,.mp3,.m4a"
+          onChange={handleFileChange}
+        />
         {audioFile && (
           <div className="audio-player">
-            <audio key={inputKey} ref={inputAudioRef} controls>
+            <audio
+              key={inputKey}
+              ref={inputAudioRef}
+              controls
+              onPlay={() => setIsPlayingInput(true)}
+              onPause={() => setIsPlayingInput(false)}
+            >
               <source src={URL.createObjectURL(audioFile)} type="audio/wav" />
               Your browser does not support the audio element.
             </audio>
@@ -96,16 +118,27 @@ function AudioInterface() {
             </div>
           </div>
         )}
-        {isLoading && <p>Processing...</p>} 
+        {isLoading && <p>Processing...</p>}
         {outputAudio && (
           <div className="audio-player">
-            <audio ref={outputAudioRef} controls>
+            <audio
+              ref={outputAudioRef}
+              controls
+              onPlay={() => setIsPlayingOutput(true)}
+              onPause={() => setIsPlayingOutput(false)}
+            >
               <source src={URL.createObjectURL(outputAudio)} type="audio/wav" />
               Your browser does not support the audio element.
             </audio>
             <div className="audio-control-container">
               <button onClick={() => handlePlayPause(outputAudioRef)}>
                 {isPlayingOutput ? "Pause" : "Play"}
+              </button>
+              <button
+                onClick={() => downloadOutput(outputAudio)}
+                className="download-button"
+              >
+                Download
               </button>
             </div>
           </div>
